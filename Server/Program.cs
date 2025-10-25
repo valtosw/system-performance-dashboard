@@ -11,9 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSignalR();
 
-#if WINDOWS
 builder.Services.AddHostedService<PerformanceMonitoringService>();
-#endif
 
 builder.Services.AddCors(options =>
 {
