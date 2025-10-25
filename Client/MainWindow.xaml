@@ -1,56 +1,63 @@
 ﻿<Window x:Class="Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Client"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        mc:Ignorable="d"
-        Title="Live Performance Dashboard" Height="450" Width="800"
+        Title="System Performance Dashboard" Height="500" Width="850"
+        Background="White"
+        Foreground="Black"
         Loaded="MainWindow_Loaded"
         Closing="MainWindow_Closing">
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Real-Time System Performance" FontSize="24" HorizontalAlignment="Center"/>
+        <TextBlock Text="Real-Time Performance Dashboard"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <lvc:Gauge From="0" To="100" Value="{Binding CpuUsage}" Margin="20">
-                <lvc:Gauge.GaugeRenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform ScaleX="2" ScaleY="2" />
-                        <TranslateTransform X="0" Y="0" />
-                    </TransformGroup>
-                </lvc:Gauge.GaugeRenderTransform>
-                <lvc:Gauge.LabelFormatter>
-                    <Binding Path="CpuUsage" StringFormat="{}{0:0.0}%"/>
-                </lvc:Gauge.LabelFormatter>
-            </lvc:Gauge>
-            <TextBlock Text="CPU Usage" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Margin="20" HorizontalAlignment="Center">
+                <lvc:Gauge Width="120" Height="120" Value="{Binding CpuUsage}" From="0" To="100"
+                           Foreground="#4a7d51" InnerRadius="40">
+                    <lvc:Gauge.LabelFormatter>
+                        <Binding Path="CpuUsage" StringFormat="{}{0:0.0}%"/>
+                    </lvc:Gauge.LabelFormatter>
+                </lvc:Gauge>
+                <TextBlock Text="CPU" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
 
-            <lvc:Gauge From="0" To="100" Value="{Binding MemoryUsage}" Margin="20">
-                <lvc:Gauge.GaugeRenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform ScaleX="2" ScaleY="2" />
-                        <TranslateTransform X="0" Y="0" />
-                    </TransformGroup>
-                </lvc:Gauge.GaugeRenderTransform>
-                <lvc:Gauge.LabelFormatter>
-                    <Binding Path="MemoryUsage" StringFormat="{}{0:0.0}%"/>
-                </lvc:Gauge.LabelFormatter>
-            </lvc:Gauge>
-            <TextBlock Text="Memory Usage" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+            <StackPanel Margin="20" HorizontalAlignment="Center">
+                <lvc:Gauge Width="120" Height="120" Value="{Binding MemoryUsage}" From="0" To="100"
+                           Foreground="#4a5285" InnerRadius="40">
+                    <lvc:Gauge.LabelFormatter>
+                        <Binding Path="MemoryUsage" StringFormat="{}{0:0.0}%"/>
+                    </lvc:Gauge.LabelFormatter>
+                </lvc:Gauge>
+                <TextBlock Text="Memory" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <Border Margin="30" Padding="15" CornerRadius="10" Background="#ebe6da">
+                <StackPanel>
+                    <TextBlock Text="Available Memory:" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding AvailableMemoryGb, StringFormat={}{0:0.00} GB}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Processes:" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding TotalProcesses}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Uptime:" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding SystemUptimeSec, StringFormat={}{0:0.0} sec}" Margin="0,0,0,8"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Text="Connection Method:" VerticalAlignment="Center" Margin="10"/>
-            <RadioButton Content="Web Sockets" IsChecked="True" VerticalAlignment="Center" Margin="5" Checked="RadioButton_Checked"/>
-            <RadioButton Content="Long Polling" VerticalAlignment="Center" Margin="5" Checked="RadioButton_Checked"/>
-            <RadioButton Content="Frequent Polls" VerticalAlignment="Center" Margin="5" Checked="RadioButton_Checked"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <TextBlock Text="Connection:" VerticalAlignment="Center" Margin="10"/>
+            <RadioButton Content="Web Sockets" IsChecked="True" Margin="5" Checked="RadioButton_Checked"/>
+            <RadioButton Content="Long Polling" Margin="5" Checked="RadioButton_Checked"/>
+            <RadioButton Content="Frequent Polls" Margin="5" Checked="RadioButton_Checked"/>
         </StackPanel>
     </Grid>
 </Window>
