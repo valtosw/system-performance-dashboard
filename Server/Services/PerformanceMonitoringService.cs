@@ -9,14 +9,17 @@ namespace Server.Services
     public sealed class PerformanceMonitoringService : BackgroundService
     {
         private readonly IHubContext<PerformanceHub> _hubContext;
+        private readonly ConnectionStatisticsService _stats;
         private readonly PerformanceCounter _cpuCounter;
         private readonly PerformanceCounter _availableMemoryCounter;
         private readonly double _totalMemoryMb;
         private readonly Stopwatch _uptimeWatch = Stopwatch.StartNew();
+        private DateTime _lastLogTime = DateTime.UtcNow;
 
-        public PerformanceMonitoringService(IHubContext<PerformanceHub> hubContext)
+        public PerformanceMonitoringService(IHubContext<PerformanceHub> hubContext, ConnectionStatisticsService stats)
         {
             _hubContext = hubContext;
+            _stats = stats;
             _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             _availableMemoryCounter = new PerformanceCounter("Memory", "Available MBytes");
             _totalMemoryMb = GetTotalMemoryMb();
@@ -46,10 +49,27 @@ namespace Server.Services
                 };
 
                 LatestMetrics = metrics;
-
                 await _hubContext.Clients.All.SendAsync("ReceivePerformanceData", metrics, stoppingToken);
+                _stats.IncrementMessageCount();
+
+                if ((DateTime.UtcNow - _lastLogTime).TotalSeconds >= 10)
+                {
+                    _lastLogTime = DateTime.UtcNow;
+                    LogStatistics();
+                }
+
                 await Task.Delay(1000, stoppingToken);
             }
+        }
+
+        private void LogStatistics()
+        {
+            Console.WriteLine($"[Server Stats] {DateTime.Now:T}");
+            Console.WriteLine($"Active connections: {_stats.ActiveConnections}");
+            Console.WriteLine($"Messages sent: {_stats.TotalMessages}");
+
+            foreach (var (id, duration) in _stats.ConnectionDurations)
+                Console.WriteLine($"  {id}: connected for {duration.TotalSeconds:0}s");
         }
 
         private static double GetTotalMemoryMb()

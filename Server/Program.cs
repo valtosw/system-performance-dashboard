@@ -11,6 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSignalR();
 
+builder.Services.AddSingleton<ConnectionStatisticsService>();
 builder.Services.AddHostedService<PerformanceMonitoringService>();
 
 builder.Services.AddCors(options =>

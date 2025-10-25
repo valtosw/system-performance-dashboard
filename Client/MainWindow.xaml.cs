@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -19,6 +20,9 @@ namespace Client
         private HubConnection _hubConnection;
         private readonly HttpClient _httpClient;
         private readonly DispatcherTimer _pollTimer;
+        private readonly Stopwatch _latencyWatch = new();
+        private int _messageCount;
+        private DateTime _startTime;
 
         private double _cpuUsage;
         public double CpuUsage { get => _cpuUsage; set { _cpuUsage = value; OnPropertyChanged(); } }
@@ -77,6 +81,10 @@ namespace Client
 
         private async Task StartSignalRConnection()
         {
+            _messageCount = 0;
+            _startTime = DateTime.Now;
+            _latencyWatch.Restart();
+
             _hubConnection.On<PerformanceMetrics>("ReceivePerformanceData", m =>
             {
                 Dispatcher.Invoke(() =>
@@ -86,6 +94,15 @@ namespace Client
                     AvailableMemoryGb = m.AvailableMemoryGb;
                     TotalProcesses = m.TotalProcesses;
                     SystemUptimeSec = m.SystemUptimeSec;
+                    _messageCount++;
+
+                    if (_messageCount % 10 == 0)
+                    {
+                        var elapsed = (DateTime.Now - _startTime).TotalSeconds;
+                        var rate = _messageCount / elapsed;
+                        Debug.WriteLine($"[Client] Mode=SignalR | {rate:0.0} msg/s | Latency~{_latencyWatch.ElapsedMilliseconds} ms");
+                        _latencyWatch.Restart();
+                    }
                 });
             });
 
@@ -93,13 +110,15 @@ namespace Client
             catch (Exception ex) { MessageBox.Show($"SignalR Error: {ex.Message}"); }
         }
 
-        private void StartFrequentPolling() => _pollTimer.Start();
-
         private async void PollTimer_Tick(object sender, EventArgs e)
         {
+            _messageCount++;
             try
             {
+                var sw = Stopwatch.StartNew();
                 var m = await _httpClient.GetFromJsonAsync<PerformanceMetrics>("/api/performance/metrics");
+                sw.Stop();
+
                 if (m != null)
                 {
                     CpuUsage = m.CpuUsage;
@@ -108,6 +127,13 @@ namespace Client
                     TotalProcesses = m.TotalProcesses;
                     SystemUptimeSec = m.SystemUptimeSec;
                 }
+
+                if (_messageCount % 10 == 0)
+                {
+                    var elapsed = (DateTime.Now - _startTime).TotalSeconds;
+                    var rate = _messageCount / elapsed;
+                    Debug.WriteLine($"[Client] Mode=Polling | {rate:0.0} msg/s | Avg latency={sw.ElapsedMilliseconds} ms");
+                }
             }
             catch (Exception ex)
             {
@@ -115,6 +141,8 @@ namespace Client
                 MessageBox.Show($"Polling Error: {ex.Message}");
             }
         }
+
+        private void StartFrequentPolling() => _pollTimer.Start();
 
         private async Task Disconnect()
         {
