@@ -11,7 +11,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSignalR();
 
+#if WINDOWS
 builder.Services.AddHostedService<PerformanceMonitoringService>();
+#endif
 
 builder.Services.AddCors(options =>
 {
@@ -44,4 +46,4 @@ app.MapControllers();
 
 app.MapHub<PerformanceHub>("/performanceHub");
 
-app.Run();
+await app.RunAsync();
