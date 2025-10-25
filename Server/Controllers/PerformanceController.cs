@@ -1,6 +1,4 @@
-﻿using System.Runtime.Versioning;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Server.Models;
 using Server.Services;
 
@@ -10,7 +8,6 @@ namespace Server.Controllers
     [ApiController]
     public sealed class PerformanceController : ControllerBase
     {
-        [SupportedOSPlatform("windows")]
         [HttpGet("metrics")]
         public ActionResult<PerformanceMetrics> GetMetrics()
         {
